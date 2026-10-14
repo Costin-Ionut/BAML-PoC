@@ -1,0 +1,227 @@
+{
+  "info": {
+    "_postman_id": "a0c1db93-1e84-4092-8214-809193b66a80",
+    "name": "BAML - Tests",
+    "description": "\\*_Test collection for the BAML PoC: one request per key BAML feature, called through FastAPI against the local model.__\\*_\n\nAll requests are POST with a JSON body.\n\n- /extract - structured output: turns free text into a typed ticket.  \n    In: {\"text\": \"Payment page crashes for all users since the 2.3 deploy.\"}  \n    Out: {\"title\": \"...\", \"priority\": \"LOW\" | \"MEDIUM\" | \"HIGH\", \"tags\": \\[\"...\"\\]}\n    \n\n- /stream - same as /extract, but streams partial tickets as the model writes (JSON Lines, one object per line; fields fill in progressively, the last line is the final ticket).  \n    In: {\"text\": \"Typo on the About page footer.\"}  \n    Out: {\"title\": null, \"priority\": null, \"tags\": \\[\\]}  \n    {\"title\": \"Typo on the About page footer\", \"priority\": \"LOW\", \"tags\": \\[\"typo\", \"footer\"\\]}\n    \n\n- /classify - dynamic types: the categories you send are added to the enum at runtime; the model must pick one of them.  \n    In: {\"text\": \"My invoice charged me twice this month.\", \"categories\": \\[\"BILLING\", \"TECHNICAL\", \"SALES\"\\]}  \n    Out: \"BILLING\"\n    \n\n- /client-registry - same ticket as /extract, but the LLM client is built in code at request time (here only temperature changes).  \n    In: {\"text\": \"Export to CSV is a bit slow.\", \"temperature\": 0.2}  \n    Out: {\"title\": \"...\", \"priority\": \"...\", \"tags\": \\[\"...\"\\]}\n    \n\n- /collector - same ticket as /extract, plus the tokens used by that call.  \n    In: {\"text\": \"Dark mode resets after logout.\"}  \n    Out: {\"ticket\": {...}, \"input_tokens\": 107, \"output_tokens\": 173}\n    \n\n- /checks - validation on an order. quantity has @assert (> 0): if it fails, the whole response is rejected (500). email has @check (contains \"@\"): the response always passes, and the check result is attached.  \n    In: {\"text\": \"Please send 3 boxes, contact me at [ana@example.com](https://mailto:ana@example.com)\"}  \n    Out: {\"quantity\": 3, \"email\": {\"value\": \"[ana@example.com](https://mailto:ana@example.com)\", \"checks\": {\"has_at\": {\"status\": \"succeeded\", ...}}}}\n    \n\n- /tools - the model picks one tool and fills in its arguments (nothing is executed). Note: the field is \"request\", not \"text\".  \n    In: {\"request\": \"What is the weather in Cluj?\"}  \n    Out: {\"tool\": \"get_weather\", \"city\": \"Cluj\"}  \n    or {\"tool\": \"send_email\", \"to\": \"...\", \"body\": \"...\"}\n    \n\nIf the model does not follow the schema (e.g. the text asks it to do something else), BAML raises a validation error and the API returns 500.  \nCalls are sent automatically to Boundary Studio (traces).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Extract",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"text\": \"Payment page crashes since the 2.3 deploy.\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/extract",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "extract"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Stream",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"text\": \"Typo on the About page footer.\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/stream",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "stream"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Classify",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"text\": \"My invoice charged me twice this month.\",\r\n    \"categories\": [\r\n        \"BILLING\",\r\n        \"TECHNICAL\",\r\n        \"SALES\"\r\n    ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/classify",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "classify"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Client Registry",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"text\": \"Export to CSV is a bit slow.\",\r\n    \"temperature\": 0.0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/client-registry",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "client-registry"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Collector",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"text\": \"Dark mode resets after logout.\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/collector",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "collector"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Checks",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"text\": \"Please send 3 boxes, contact me at ana@example.com\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/checks",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "checks"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Tools",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"request\": \"What is the weather in Cluj?\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/tools",
+          "protocol": "http",
+          "host": [
+            "127",
+            "0",
+            "0",
+            "1"
+          ],
+          "port": "8000",
+          "path": [
+            "tools"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

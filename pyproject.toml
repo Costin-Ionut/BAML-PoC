@@ -1,0 +1,22 @@
+[project]
+name = "baml-poc"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "baml-py==0.226.2",
+    "fastapi>=0.138.2",
+    "granian>=2.7.9",
+    "python-dotenv>=1.2.2",
+]
+
+[tool.ruff]
+line-length = 100
+extend-exclude = ["baml_client"]
+
+[tool.ruff.lint]
+extend-select = ["I", "UP", "B"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+exclude = ["baml_client", ".venv"]
